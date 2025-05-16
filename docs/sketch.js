@@ -6,6 +6,7 @@ let engine, runner, mouse
 let crl1, crl2, crl3
 let cn1o, cn1q, cn2o, cn2q
 let rct1, rct2
+let x
 function setup() {
   const canvas = createCanvas(600, 600)
   canvas.parent("canvas-p5")
@@ -22,7 +23,7 @@ function setup() {
   mouse = MouseConstraint.create(engine, {
     mouse: mouseCanvas,
     constraint: {
-      stiffness: 0.8
+      stiffness: 0.2
     }
   })
 
@@ -37,14 +38,14 @@ function setup() {
     isSensor: true
   })
 
-  const x = Math.random() * 200 - 200
+  x = Math.random() * 400 - 200
 
   rct1 = new Rect((width / 2) + x, (height / 2) + x, 160, 30, {
     isSensor: true,
     frictionAir: 0,
     color: "#273f4f"
   })
-  rct2 = new Rect((width / 2) + x, (height / 2) + x, 160, 30, {
+  rct2 = new Rect((width / 2) + x + 50, (height / 2) + x + 50, 160, 30, {
     frictionAir: 0,
     color: "#fe7743"
   })

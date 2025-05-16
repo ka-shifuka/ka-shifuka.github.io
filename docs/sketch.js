@@ -1,8 +1,11 @@
 const {Engine, Runner, Composite, Bodies} = Matter
 const {Mouse, MouseConstraint, Constraint} = Matter
 
-let engine, runner, mouse, circles = [], connected1, connected2
+let engine, runner, mouse
 
+let crl1, crl2, crl3
+let cn1o, cn1q, cn2o, cn2q
+let rct1, rct2
 function setup() {
   const canvas = createCanvas(600, 600)
   canvas.parent("canvas-p5")
@@ -10,6 +13,8 @@ function setup() {
   canvas.elt.style = ""
 
   engine = Engine.create()
+  engine.constraintIterations = 50
+  engine.gravity.scale = 0.001
   runner = Runner.create()
 
   const mouseCanvas = Mouse.create(canvas.elt)
@@ -21,46 +26,87 @@ function setup() {
     }
   })
 
-  circles.push(new Circle(300, 300, 20, {isStatic: true}))
-  circles.push(new Circle(300, 100, 20))
-  circles.push(new Circle(200, 200, 20))
-
-  connected1 = Constraint.create({
-    bodyA: circles[0].body,
-    bodyB: circles[1].body,
-    length: 130
+  crl1 = new Circle(width / 2, height / 2, 2, {
+    isStatic: true,
+    isSensor: true
   })
-  connected2 = Constraint.create({
-    bodyA: circles[1].body,
-    bodyB: circles[2].body,
-    length: 130
+  crl2 = new Circle(width / 2 - 100, height / 2 + 100, 2, {
+    isSensor: true
+  })
+  crl3 = new Circle(width / 2 + 100, height / 2 - 100, 2, {
+    isSensor: true
   })
 
-  Composite.add(engine.world, [mouse, connected1, connected2])
+  const x = Math.random() * 200 - 200
+
+  rct1 = new Rect((width / 2) + x, (height / 2) + x, 160, 30, {
+    isSensor: true,
+    frictionAir: 0,
+    color: "#273f4f"
+  })
+  rct2 = new Rect((width / 2) + x, (height / 2) + x, 160, 30, {
+    frictionAir: 0,
+    color: "#fe7743"
+  })
+
+  cn1o = createConstraint({
+    bodyA: crl1.body,
+    bodyB: rct1.body,
+    pointB: {
+      x: -rct1.width / 2 + 10,
+      y: 0
+    },
+    stiffness: 0.9,
+    length: 0
+  })
+  cn1q = createConstraint({
+    bodyA: crl2.body,
+    bodyB: rct1.body,
+    pointB: {
+      x: rct1.width / 2 - 10,
+      y: 0
+    },
+    stiffness: 0.9,
+    length: 0
+  })
+  cn2o = createConstraint({
+    bodyA: crl2.body,
+    bodyB: rct2.body,
+    pointB: {
+      x: -rct2.width / 2 + 10,
+      y: 0
+    },
+    stiffness: 0.9,
+    length: 0
+  })
+  cn2q = createConstraint({
+    bodyA: crl3.body,
+    bodyB: rct2.body,
+    pointB: {
+      x: rct2.width / 2 - 10,
+      y: 0
+    },
+    length: 0
+  })
+
+
+  Composite.add(engine.world, [mouse])
   Runner.run(runner, engine)
 }
 
 function draw() {
   background(color("#ffffff"))
-  lines()
 
-  for (let cirs of circles) {
-    cirs.draw()
-  }
-}
-
-function lines() {
-  const a = circles[0].body.position
-  const b = circles[1].body.position
-  const c = circles[2].body.position
-
-  line(a.x, a.y, b.x, b.y)
-  line(b.x, b.y, c.x, c.y)
+  rct1.draw()
+  crl1.draw()
+  rct2.draw()
+  crl2.draw()
+  crl3.draw()
 
 }
 
 class Circle {
-  /**@type {Matter.IBodyDefinition} options*/
+  /**@param {Matter.IBodyDefinition} options*/
   constructor(x, y, radius, options = {}) {
     this.radius = radius
     this.body = Bodies.circle(x, y, this.radius, options)
@@ -71,8 +117,42 @@ class Circle {
   draw() {
     push()
     translate(this.body.position.x, this.body.position.y)
-    strokeWeight(1)
+    strokeWeight(0.5)
+    fill(0)
     circle(0, 0, this.radius * 2)
     pop()
   }
+}
+
+class Rect {
+  /**@param {Matter.IBodyDefinition} options*/
+  constructor(x, y, width, height, options = {}) {
+    this.width = width
+    this.height = height
+    this.color = options.color || "#ffffff"
+    this.body = Bodies.rectangle(x, y, this.width, this.height, options)
+
+    Composite.add(engine.world, this.body)
+  }
+
+  draw() {
+    push()
+    translate(this.body.position.x, this.body.position.y)
+    rectMode("center")
+
+    rotate(this.body.angle)
+    strokeWeight(0.5)
+    fill(color(this.color))
+    rect(0, 0, this.width, this.height, 10)
+
+    pop()
+  }
+}
+
+/**@param {Matter.IConstraintDefinition} options*/
+function createConstraint(options = {}) {
+  const constraint = Constraint.create(options)
+  Composite.add(engine.world, constraint)
+
+  return constraint
 }
